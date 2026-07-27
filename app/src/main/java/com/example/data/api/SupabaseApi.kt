@@ -19,7 +19,7 @@ interface SupabaseApi {
         @Header("Authorization") authHeader: String
     ): List<UserAccount>
 
-    @POST("user_accounts")
+    @POST("user_accounts?on_conflict=username")
     suspend fun upsertUsers(
         @Header("apikey") apiKey: String,
         @Header("Authorization") authHeader: String,
@@ -40,7 +40,7 @@ interface SupabaseApi {
         @Header("Authorization") authHeader: String
     ): List<Warga>
 
-    @POST("warga_list")
+    @POST("warga_list?on_conflict=nik")
     suspend fun upsertWarga(
         @Header("apikey") apiKey: String,
         @Header("Authorization") authHeader: String,
