@@ -20,7 +20,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Logout
@@ -1812,11 +1815,15 @@ fun StatusStatCard(
 @Composable
 fun BackupRestoreTab(viewModel: AppViewModel, isAdmin: Boolean, isScrollable: Boolean = true) {
     val backupRestoreMessage by viewModel.backupRestoreMessage.collectAsStateWithLifecycle()
+    val syncing by viewModel.syncing.collectAsStateWithLifecycle()
+    val syncError by viewModel.syncError.collectAsStateWithLifecycle()
+    val syncSuccess by viewModel.syncSuccess.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         viewModel.clearBackupMessage()
+        viewModel.clearSyncStatus()
     }
 
     // Android Storage Access Framework file pickers
@@ -2128,6 +2135,207 @@ fun BackupRestoreTab(viewModel: AppViewModel, isAdmin: Boolean, isScrollable: Bo
                     modifier = Modifier.padding(16.dp),
                     textAlign = TextAlign.Center
                 )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Card Supabase Cloud Sync
+        var showSqlScript by remember { mutableStateOf(false) }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)),
+            border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Sync,
+                        contentDescription = "Cloud sync icon",
+                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(36.dp)
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = "Supabase Cloud Sync",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Text(
+                            text = "Integrasikan & singkronkan seluruh data lokal dengan server Supabase cloud.",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Button(
+                    onClick = { viewModel.syncWithSupabase() },
+                    enabled = !syncing,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary)
+                ) {
+                    if (syncing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 2.dp
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Mensinkronkan...", fontWeight = FontWeight.Bold)
+                    } else {
+                        Icon(Icons.Default.Sync, contentDescription = "Sync Now")
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Singkronkan Sekarang", fontWeight = FontWeight.Bold)
+                    }
+                }
+
+                if (syncSuccess) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFE8F5E9)),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.CheckCircle, contentDescription = "Success", tint = Color(0xFF2E7D32))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Singkronisasi Berhasil! Seluruh data lokal dan Supabase cloud telah diselaraskan.",
+                                color = Color(0xFF1B5E20),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
+                    }
+                }
+
+                if (syncError != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Error, contentDescription = "Error", tint = Color(0xFFC62828))
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = syncError ?: "",
+                                    color = Color(0xFFB71C1C),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Kemungkinan tabel 'user_accounts' dan 'warga_list' belum dibuat di Supabase Anda, atau Row Level Security (RLS) menghalangi akses.",
+                                color = Color(0xFFB71C1C),
+                                style = MaterialTheme.typography.bodySmall
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                OutlinedButton(
+                    onClick = { showSqlScript = !showSqlScript },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Icon(if (showSqlScript) Icons.Default.Info else Icons.Default.Code, contentDescription = "SQL")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = if (showSqlScript) "Sembunyikan Petunjuk SQL" else "Tampilkan Script SQL Supabase Setup",
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+
+                if (showSqlScript) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Text(
+                                text = "Jalankan script SQL berikut di SQL Editor Supabase Anda untuk membuat tabel kependudukan:",
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.height(8.dp))
+                            val sqlScript = """
+                                -- 1. Buat tabel user_accounts
+                                create table user_accounts (
+                                  username text primary key,
+                                  "passwordHash" text not null,
+                                  "fullName" text not null,
+                                  status text not null,
+                                  "isAdmin" boolean default false,
+                                  rt text,
+                                  rw text
+                                );
+
+                                -- 2. Buat tabel warga_list
+                                create table warga_list (
+                                  nik text primary key,
+                                  nama text not null,
+                                  "tempatLahir" text not null,
+                                  "tanggalLahir" text not null,
+                                  "jenisKelamin" text not null,
+                                  alamat text not null,
+                                  rt text not null,
+                                  rw text not null,
+                                  agama text not null,
+                                  "statusKawin" text not null,
+                                  pekerjaan text not null,
+                                  "golDarah" text not null,
+                                  "noKk" text not null,
+                                  "hubKeluarga" text not null,
+                                  pendidikan text not null,
+                                  "pekerjaanDetail" text default '',
+                                  "noHp" text default '',
+                                  keterangan text not null,
+                                  "jumlahAnggotaKeluarga" integer default 0,
+                                  "inputtedBy" text not null,
+                                  timestamp bigint not null
+                                );
+
+                                -- 3. Nonaktifkan RLS untuk akses bebas anonim
+                                alter table user_accounts disable row level security;
+                                alter table warga_list disable row level security;
+                            """.trimIndent()
+
+                            androidx.compose.foundation.text.selection.SelectionContainer {
+                                Text(
+                                    text = sqlScript,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    fontFamily = androidx.compose.ui.text.font.FontFamily.Monospace,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState())
+                                        .background(
+                                            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
+                                            shape = RoundedCornerShape(4.dp)
+                                        )
+                                        .padding(8.dp)
+                                )
+                            }
+                        }
+                    }
+                }
             }
         }
 

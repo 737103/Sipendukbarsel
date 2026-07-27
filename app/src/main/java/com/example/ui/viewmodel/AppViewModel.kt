@@ -31,9 +31,14 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         val database = AppDatabase.getDatabase(application)
         repository = AppRepository(database.userDao(), database.wargaDao())
         
-        // Ensure admin user is seeded at app launch
+        // Ensure admin user is seeded at app launch and sync with Supabase
         viewModelScope.launch {
             repository.ensureAdminExists()
+            try {
+                repository.syncWithSupabase()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
         }
     }
 
@@ -83,6 +88,16 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     private val _backupRestoreMessage = MutableStateFlow<String?>(null)
     val backupRestoreMessage = _backupRestoreMessage.asStateFlow()
 
+    // Supabase Sync State
+    private val _syncing = MutableStateFlow(false)
+    val syncing = _syncing.asStateFlow()
+
+    private val _syncError = MutableStateFlow<String?>(null)
+    val syncError = _syncError.asStateFlow()
+
+    private val _syncSuccess = MutableStateFlow(false)
+    val syncSuccess = _syncSuccess.asStateFlow()
+
     private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
@@ -94,6 +109,27 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
     fun clearInputSuccess() { _inputSuccess.value = false }
     fun clearInputError() { _inputError.value = null }
     fun clearBackupMessage() { _backupRestoreMessage.value = null }
+    
+    fun clearSyncStatus() {
+        _syncError.value = null
+        _syncSuccess.value = false
+    }
+
+    fun syncWithSupabase() {
+        viewModelScope.launch {
+            _syncing.value = true
+            _syncError.value = null
+            _syncSuccess.value = false
+            try {
+                repository.syncWithSupabase()
+                _syncSuccess.value = true
+            } catch (e: Exception) {
+                _syncError.value = "Sinkronisasi gagal: ${e.localizedMessage}. Pastikan tabel 'user_accounts' dan 'warga_list' sudah dibuat di database Supabase Anda."
+            } finally {
+                _syncing.value = false
+            }
+        }
+    }
 
     // Authentication
     fun login(username: String, passwordPlain: String) {
