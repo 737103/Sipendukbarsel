@@ -138,34 +138,7 @@ class AppRepository(
         userDao.getAllUsers()
     }
 
-    suspend fun ensureAdminExists() = withContext(Dispatchers.IO) {
-        var admin = userDao.getUserByUsername("admin")
-        if (admin == null) {
-            admin = UserAccount(
-                username = "admin",
-                passwordHash = "admin", // Default password is admin
-                fullName = "Administrator Kelurahan",
-                status = "APPROVED",
-                isAdmin = true
-            )
-            userDao.registerUser(admin)
-        }
-        try {
-            SupabaseClient.api.upsertUsers(
-                SupabaseClient.API_KEY,
-                SupabaseClient.authHeader,
-                users = listOf(admin)
-            )
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
-    }
-
-    /**
-     * Dual synchronization between local SQLite (Room) and remote Supabase database.
-     */
-    suspend fun syncWithSupabase() = withContext(Dispatchers.IO) {
-        // 1. Fetch remote users and save to local
+    suspend fun syncUsersFromSupabase() = withContext(Dispatchers.IO) {
         try {
             val remoteUsers = SupabaseClient.api.getAllUsers(SupabaseClient.API_KEY, SupabaseClient.authHeader)
             for (u in remoteUsers) {
@@ -176,6 +149,49 @@ class AppRepository(
                     userDao.updateUser(u)
                 }
             }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            throw e
+        }
+    }
+
+    suspend fun ensureAdminExists() = withContext(Dispatchers.IO) {
+        // Try syncing from Supabase first so we don't overwrite any admin password changed in Supabase
+        try {
+            syncUsersFromSupabase()
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+        var admin = userDao.getUserByUsername("admin")
+        if (admin == null) {
+            admin = UserAccount(
+                username = "admin",
+                passwordHash = "admin", // Default password is admin
+                fullName = "Administrator Kelurahan",
+                status = "APPROVED",
+                isAdmin = true
+            )
+            userDao.registerUser(admin)
+            try {
+                SupabaseClient.api.upsertUsers(
+                    SupabaseClient.API_KEY,
+                    SupabaseClient.authHeader,
+                    users = listOf(admin)
+                )
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+    }
+
+    /**
+     * Dual synchronization between local SQLite (Room) and remote Supabase database.
+     */
+    suspend fun syncWithSupabase() = withContext(Dispatchers.IO) {
+        // 1. Fetch remote users and save to local
+        try {
+            syncUsersFromSupabase()
         } catch (e: Exception) {
             e.printStackTrace()
             throw e

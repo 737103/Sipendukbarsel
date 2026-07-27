@@ -140,6 +140,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                 return@launch
             }
 
+            // Sync user accounts from Supabase first so we check with the most up-to-date data
+            try {
+                repository.syncUsersFromSupabase()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+
             val user = repository.getUserByUsername(username.trim())
             if (user == null) {
                 _loginError.value = "Username tidak ditemukan"
@@ -175,6 +182,13 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             if (username.trim().lowercase() == "admin") {
                 _registerError.value = "Username 'admin' sudah digunakan"
                 return@launch
+            }
+
+            // Sync user accounts from Supabase first so we check against the latest remote user registrations
+            try {
+                repository.syncUsersFromSupabase()
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
 
             val existing = repository.getUserByUsername(username.trim())
