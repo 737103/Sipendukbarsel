@@ -417,20 +417,20 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             sb.append("NIK,No. KK,Nama Lengkap,Tempat Lahir,Tanggal Lahir,Jenis Kelamin,Alamat,RT,RW,Agama,Status Kawin,Pekerjaan,Detail Pekerjaan,No. HP,Hubungan Keluarga,Pendidikan,Keterangan,Jumlah Anggota Keluarga,Diinput Oleh\n")
             for (w in dataToExport) {
                 val row = listOf(
-                    escapeCsv(w.nik),
-                    escapeCsv(w.noKk),
+                    escapeCsv(w.nik, forceText = true),
+                    escapeCsv(w.noKk, forceText = true),
                     escapeCsv(w.nama),
                     escapeCsv(w.tempatLahir),
                     escapeCsv(w.tanggalLahir),
                     escapeCsv(w.jenisKelamin),
                     escapeCsv(w.alamat),
-                    escapeCsv(w.rt),
-                    escapeCsv(w.rw),
+                    escapeCsv(w.rt, forceText = true),
+                    escapeCsv(w.rw, forceText = true),
                     escapeCsv(w.agama),
                     escapeCsv(w.statusKawin),
                     escapeCsv(w.pekerjaan),
                     escapeCsv(w.pekerjaanDetail),
-                    escapeCsv(w.noHp),
+                    escapeCsv(w.noHp, forceText = true),
                     escapeCsv(w.hubKeluarga),
                     escapeCsv(w.pendidikan),
                     escapeCsv(w.keterangan),
@@ -445,8 +445,11 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
-    private fun escapeCsv(value: String): String {
+    private fun escapeCsv(value: String, forceText: Boolean = false): String {
         val clean = value.replace("\r", "").replace("\n", " ")
+        if (forceText) {
+            return "=\"$clean\""
+        }
         if (clean.contains(",") || clean.contains("\"")) {
             return "\"" + clean.replace("\"", "\"\"") + "\""
         }
@@ -485,7 +488,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
             sb.append("<style>\n")
             sb.append("table { border-collapse: collapse; width: 100%; }\n")
             sb.append("th { background-color: #2E7D32; color: white; font-weight: bold; padding: 8px; border: 1px solid #dddddd; }\n")
-            sb.append("td { padding: 8px; border: 1px solid #dddddd; mso-number-format:\"\\@\"; }\n")
+            sb.append("td { padding: 8px; border: 1px solid #dddddd; mso-number-format:'\\@'; }\n")
             sb.append("</style>\n")
             sb.append("</head>\n")
             sb.append("<body>\n")
@@ -512,7 +515,7 @@ class AppViewModel(application: Application) : AndroidViewModel(application) {
                     w.noHp, w.hubKeluarga, w.pendidikan, w.keterangan, w.jumlahAnggotaKeluarga.toString(), w.inputtedBy
                 )
                 for (field in fields) {
-                    sb.append("  <td>").append(escapeHtml(field)).append("</td>\n")
+                    sb.append("  <td x:str style=\"mso-number-format:'\\@';\">").append(escapeHtml(field)).append("</td>\n")
                 }
                 sb.append("</tr>\n")
             }
