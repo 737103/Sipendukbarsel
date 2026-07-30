@@ -1457,9 +1457,17 @@ fun UserStatistikTab(viewModel: AppViewModel, isAdminGlobal: Boolean = false) {
     val maleCount = wargaList.count { it.jenisKelamin.lowercase() == "laki-laki" }
     val femaleCount = wargaList.count { it.jenisKelamin.lowercase() == "perempuan" }
 
-    // Grouping for RtRw and Agama
+    // Grouping for RtRw, Agama, Pekerjaan, and Pendidikan
     val rtRwStats = wargaList.groupBy { it.rtRw }.mapValues { it.value.size }
     val agamaStats = wargaList.groupBy { it.agama }.mapValues { it.value.size }
+    val pekerjaanStats = wargaList.groupBy { if (it.pekerjaan.isBlank()) "Lainnya/Belum Diisi" else it.pekerjaan }
+        .mapValues { it.value.size }
+        .toList()
+        .sortedByDescending { it.second }
+    val pendidikanStats = wargaList.groupBy { if (it.pendidikan.isBlank()) "Lainnya/Belum Diisi" else it.pendidikan }
+        .mapValues { it.value.size }
+        .toList()
+        .sortedByDescending { it.second }
 
     Column(
         modifier = Modifier
@@ -1732,6 +1740,128 @@ fun UserStatistikTab(viewModel: AppViewModel, isAdminGlobal: Boolean = false) {
                                         .fillMaxWidth(barRatio)
                                         .clip(RoundedCornerShape(8.dp))
                                         .background(MaterialTheme.colorScheme.tertiary)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "$count jiwa",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.width(60.dp),
+                                textAlign = TextAlign.End
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Pekerjaan stats
+        Text("Distribusi Pekerjaan", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                if (pekerjaanStats.isEmpty()) {
+                    Text("Data Pekerjaan belum tersedia", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                } else {
+                    val maxVal = pekerjaanStats.maxOfOrNull { it.second } ?: 1
+                    pekerjaanStats.forEach { (pekerjaan, count) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = pekerjaan,
+                                modifier = Modifier.width(110.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            // Bar
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(16.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.primaryContainer)
+                            ) {
+                                val barRatio = count.toFloat() / maxVal.toFloat()
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .fillMaxWidth(barRatio)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.primary)
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "$count jiwa",
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.Bold,
+                                modifier = Modifier.width(60.dp),
+                                textAlign = TextAlign.End
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Pendidikan stats
+        Text("Distribusi Pendidikan", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(8.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                if (pendidikanStats.isEmpty()) {
+                    Text("Data Pendidikan belum tersedia", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
+                } else {
+                    val maxVal = pendidikanStats.maxOfOrNull { it.second } ?: 1
+                    pendidikanStats.forEach { (pendidikan, count) ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = pendidikan,
+                                modifier = Modifier.width(110.dp),
+                                style = MaterialTheme.typography.bodyMedium,
+                                fontWeight = FontWeight.SemiBold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            // Bar
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(16.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                            ) {
+                                val barRatio = count.toFloat() / maxVal.toFloat()
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxHeight()
+                                        .fillMaxWidth(barRatio)
+                                        .clip(RoundedCornerShape(8.dp))
+                                        .background(MaterialTheme.colorScheme.secondary)
                                 )
                             }
                             Spacer(modifier = Modifier.width(8.dp))
