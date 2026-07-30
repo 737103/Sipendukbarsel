@@ -585,7 +585,7 @@ fun UserInputWargaTab(viewModel: AppViewModel) {
     var hubKeluarga by remember { mutableStateOf("Kepala Keluarga") }
     var agama by remember { mutableStateOf("Islam") }
     var statusKawin by remember { mutableStateOf("Belum Kawin") }
-    var pendidikan by remember { mutableStateOf("Tidak Sekolah") }
+    var pendidikan by remember { mutableStateOf("Belum Sekolah/Tidak Sekolah") }
     var pekerjaan by remember { mutableStateOf("Belum Bekerja") }
     var pekerjaanDetail by remember { mutableStateOf("") }
     var golDarah by remember { mutableStateOf("O") }
@@ -616,7 +616,7 @@ fun UserInputWargaTab(viewModel: AppViewModel) {
             hubKeluarga = "Kepala Keluarga"
             agama = "Islam"
             statusKawin = "Belum Kawin"
-            pendidikan = "Tidak Sekolah"
+            pendidikan = "Belum Sekolah/Tidak Sekolah"
             pekerjaan = "Belum Bekerja"
             pekerjaanDetail = ""
             golDarah = "O"
@@ -993,7 +993,7 @@ fun UserInputWargaTab(viewModel: AppViewModel) {
                     shape = RoundedCornerShape(12.dp)
                 )
                 DropdownMenu(expanded = pendExpanded, onDismissRequest = { pendExpanded = false }) {
-                    val daftarPend = listOf("Tidak Sekolah", "SD Sederajat", "SMP Sederajat", "SMA / SMK Sederajat", "D2/D3", "D4/S1", "S2", "S3")
+                    val daftarPend = listOf("Belum Sekolah/Tidak Sekolah", "SD Sederajat", "SMP Sederajat", "SMA / SMK Sederajat", "D2/D3", "D4/S1", "S2", "S3")
                     daftarPend.forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option) },
@@ -3236,7 +3236,7 @@ fun EditWargaDialog(
                         modifier = Modifier.fillMaxWidth()
                     )
                     DropdownMenu(expanded = pendExpanded, onDismissRequest = { pendExpanded = false }) {
-                        val daftarPend = listOf("Tidak Sekolah", "SD Sederajat", "SMP Sederajat", "SMA / SMK Sederajat", "D2/D3", "D4/S1", "S2", "S3")
+                        val daftarPend = listOf("Belum Sekolah/Tidak Sekolah", "SD Sederajat", "SMP Sederajat", "SMA / SMK Sederajat", "D2/D3", "D4/S1", "S2", "S3")
                         daftarPend.forEach { option ->
                             DropdownMenuItem(text = { Text(option) }, onClick = { pendidikan = option; pendExpanded = false })
                         }
@@ -3404,7 +3404,7 @@ class FamilyMemberInputState {
     var jenisKelamin by mutableStateOf("Laki-laki")
     var agama by mutableStateOf("Islam")
     var statusKawin by mutableStateOf("Belum Kawin")
-    var pendidikan by mutableStateOf("Tidak Sekolah")
+    var pendidikan by mutableStateOf("Belum Sekolah/Tidak Sekolah")
     var pekerjaan by mutableStateOf("Belum Bekerja")
     var pekerjaanDetail by mutableStateOf("")
     var golDarah by mutableStateOf("O")
@@ -3679,7 +3679,7 @@ fun FamilyMemberFormBlock(
                     shape = RoundedCornerShape(12.dp)
                 )
                 DropdownMenu(expanded = pendExpanded, onDismissRequest = { pendExpanded = false }) {
-                    val daftarPend = listOf("Tidak Sekolah", "SD Sederajat", "SMP Sederajat", "SMA / SMK Sederajat", "D2/D3", "D4/S1", "S2", "S3")
+                    val daftarPend = listOf("Belum Sekolah/Tidak Sekolah", "SD Sederajat", "SMP Sederajat", "SMA / SMK Sederajat", "D2/D3", "D4/S1", "S2", "S3")
                     daftarPend.forEach { option ->
                         DropdownMenuItem(
                             text = { Text(option) },

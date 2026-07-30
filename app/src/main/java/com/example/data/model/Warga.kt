@@ -19,7 +19,7 @@ data class Warga(
     val golDarah: String, // "A" / "B" / "AB" / "O" / "-"
     val noKk: String, // 16-digit Family Card Number (No. KK)
     val hubKeluarga: String, // Kepala Keluarga, Isteri, anak, cucu, Orang tua, Mertua, Famili lain
-    val pendidikan: String, // Tidak Sekolah, SD sederajat, SMP sederajat, SMA /SMK sederajat, D2/D3, D4/S1, S2, S3
+    val pendidikan: String, // Belum Sekolah/Tidak Sekolah, SD sederajat, SMP sederajat, SMA /SMK sederajat, D2/D3, D4/S1, S2, S3
     val pekerjaanDetail: String = "", // Custom manual text if pekerjaan is "Lainnya"
     val noHp: String = "", // Optional phone number
     val keterangan: String, // Penduduk tetap, Domisili Sementara, Meninggal, Pindah domisili, Tidak Diketahui alamatnya
